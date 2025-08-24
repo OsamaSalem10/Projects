@@ -1,1 +1,1 @@
-![GitHub Profile Image](https://github.com/OsamaSalem10.png)
+[عرض السيرة الذاتية (PDF)](./src/components/Osama.pdf)
