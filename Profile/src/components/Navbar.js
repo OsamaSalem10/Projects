@@ -6,9 +6,9 @@ export const Navbar = () => {
     return (
         <header className="header">
             <div className="header__socials">
-                <Link to={`mailto:${"osama.mohamad.salem@gmail.com"}?subject=${""}&body=${""}`}><i className="ri-mail-fill"></i></Link>
-                <Link to={"https://github.com/osamaSale"} target="_blank" rel="noreferrer"><i className="ri-github-fill"></i></Link>
-                <Link to={"https://www.linkedin.com/in/osama-salem-a94777258/"} target="_blank" rel="noreferrer"><i className="ri-linkedin-fill"></i></Link>
+                <Link to={`mailto:${"osama.moha.salem@gmail.com"}?subject=${""}&body=${""}`}><i className="ri-mail-fill"></i></Link>
+                <Link to={"https://github.com/OsamaSalem10"} target="_blank" rel="noreferrer"><i className="ri-github-fill"></i></Link>
+                <Link to={"https://www.linkedin.com/in/osamasalemo/"} target="_blank" rel="noreferrer"><i className="ri-linkedin-fill"></i></Link>
             </div>
             <nav>
                 <div className="nav__bar">
