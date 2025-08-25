@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import ExamplePdf from './Osama.pdf';
+// احذف السطر التالي
+// import ExamplePdf from './Osama.pdf';
 export const About = () => {
     return (
         <>
@@ -22,12 +23,18 @@ export const About = () => {
                         solutions that not only meet but exceed expectations.
                     </h4>
                     <div className="about__btns">
-                        <Link to={ExamplePdf} target="_blank" download={'Osama'} className="download__btn">
+                        <a
+                            href="/Osama.pdf"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download="Osama"
+                            className="download__btn"
+                        >
                             Download CV
-                        </Link>
-                        <Link to={`mailto:${"osama.mohamad.salem@gmail.com"}?subject=${""}&body=${""}`}><i className="ri-mail-fill"></i></Link>
-                        <Link to={"https://github.com/osamaSale"} ><i className="ri-github-fill"></i></Link>
-                        <Link ><i className="ri-linkedin-fill"></i></Link>
+                        </a>
+                        <Link to={`mailto:${"osama.moha.salem@gmail.com"}?subject=${""}&body=${""}`}><i className="ri-mail-fill"></i></Link>
+                        <Link to={"https://github.com/OsamaSalem10"} ><i className="ri-github-fill"></i></Link>
+                        <Link to={"https://www.linkedin.com/in/osamasalemo/"}><i className="ri-linkedin-fill"></i></Link>
                     </div>
                 </div>
             </section>
@@ -63,4 +70,3 @@ export const About = () => {
         </>
     );
 }
-
