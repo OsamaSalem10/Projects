@@ -1,0 +1,9 @@
+[[redirects]]
+from = "/Osama.pdf"
+to = "/Osama.pdf"
+status = 200
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
