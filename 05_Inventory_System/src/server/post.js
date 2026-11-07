@@ -3,14 +3,13 @@ import { toast } from "react-toastify";
 class PostService {
     async createCategory(formData, update, navigate) {
         try {
-            const data  = await api.post("/categories", formData);
+            const data = await api.post("/categories", formData);
 
             toast.success("Category created successfully!");
 
             await update();
 
             navigate("/");
-console.log(data)
             return data;
         } catch (error) {
             toast.error(
@@ -25,7 +24,7 @@ console.log(data)
     async createProduct(formData, update, navigate) {
         try {
             const { data } = await api.post("/products", formData);
-console.log(data)
+            console.log(data)
             toast.success("Product created successfully!");
 
             await update();

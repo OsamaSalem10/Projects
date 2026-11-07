@@ -1,71 +1,67 @@
-const db = require("../config/db");
 
+const mongoose = require("mongoose");
+
+// ==================== SCHEMA ====================
+const categorySchema = new mongoose.Schema(
+    {
+        name: {
+            type: String,
+            required: true,
+            trim: true,
+            maxlength: 100,
+            unique: true
+        }
+    },
+    {
+        timestamps: true
+    }
+);
+
+const Category = mongoose.models.Category ||
+    mongoose.model("Category", categorySchema);
+
+
+// ==================== OOP MODEL ====================
 class Categories {
+
     constructor(name) {
-        this.name = name
+        this.name = name;
     }
-    // ==================== CREATE ====================
+
+    // ================= CREATE ====================
     async create() {
-        const sql = `
-      INSERT INTO categories
-      (name) VALUES (?)`;
-
-        const [result] = await db.promise().query(sql, [
-            this.name
-        ]);
-
-        return result;
+        return await Category.create({
+            name: this.name
+        });
     }
-    // ==================== READ ALL ====================
+
+    // ================= READ ALL ====================
     static async findAll() {
-        const sql = `
-      SELECT *
-      FROM categories
-      ORDER BY id DESC
-    `;
-
-        const [result] = await db.promise().query(sql);
-
-        return result;
+        return await Category.find()
+            .sort({ _id: -1 });
     }
-    // ==================== READ ONE ====================
+
+    // ================= READ ONE ====================
     static async findById(id) {
-        const sql = `
-      SELECT *
-      FROM categories
-      WHERE id = ?
-      LIMIT 1
-    `;
-
-        const [result] = await db.promise().query(sql, [id]);
-
-        return result[0];
+        return await Category.findById(id);
     }
-    // ==================== UPDATE ====================
+
+    // ================= UPDATE ====================
     static async update(id, name) {
-        const sql = `
-      UPDATE categories
-      SET name = ? WHERE id = ?
-    `;
-
-        const [result] = await db.promise().query(sql, [
-            name,
-            id
-        ]);
-
-        return result;
+        return await Category.findByIdAndUpdate(
+            id,
+            { name },
+            {
+                new: true,
+                runValidators: true
+            }
+        );
     }
-    // ==================== DELETE ====================
+
+    // ================= DELETE ====================
     static async delete(id) {
-        const sql = `
-      DELETE FROM categories
-      WHERE id = ?
-    `;
-
-        const [result] = await db.promise().query(sql, [id]);
-
-        return result;
+        return await Category.findByIdAndDelete(id);
     }
 }
 
-module.exports = Categories
+module.exports = Categories;

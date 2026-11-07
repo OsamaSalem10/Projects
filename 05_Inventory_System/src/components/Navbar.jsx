@@ -45,21 +45,24 @@ export const Navbar = ({ main, toggleTheme, theme }) => {
 
             <ul className="navbar-nav me-auto mb-2 md:mb-0">
 
-              {main?.categories?.length > 0 ? (
-                main.categories.map((category) => (
-                  <li className="nav-item" key={category.id}>
-                    <Link className="nav-link" to={`/${category.id}`}>
-                      {category.name}
-                    </Link>
-                  </li>
-                ))
-              ) : (
-                <li className="nav-item">
-                  <span className="nav-link text-muted">
-                    No categories found
-                  </span>
-                </li>
-              )}
+           {main?.categories?.length > 0 ? (
+    main.categories.map((category) => (
+        <li key={category._id} className="nav-item" >
+            <Link
+                className="nav-link"
+                to={`/${category._id}`}
+            >
+                {category.name}
+            </Link>
+        </li>
+    ))
+) : (
+    <li className="nav-item">
+        <span className="nav-link text-muted">
+            No categories found
+        </span>
+    </li>
+)}
 
             </ul>
 

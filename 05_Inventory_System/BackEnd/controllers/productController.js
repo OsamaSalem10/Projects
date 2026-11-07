@@ -1,4 +1,6 @@
 
+const mongoose = require("mongoose");
+
 const Products = require("../models/productModel");
 const Categories = require("../models/categoryModel");
 
@@ -7,13 +9,12 @@ class ProductsController {
     // ==================== GET ALL ====================
     static async getAll(req, res, next) {
         try {
-            const result = await Products.findAll();
+            const result = await Products.getAll();
 
-            res.status(200).json({
+            return res.status(200).json({
                 success: true,
-                result,
+                result
             });
-
         } catch (error) {
             next(error);
         }
@@ -22,29 +23,28 @@ class ProductsController {
     // ==================== GET ONE ====================
     static async getById(req, res, next) {
         try {
-            const id = Number(req.params.id);
+            const { id } = req.params;
 
-            if (!Number.isSafeInteger(id) || id <= 0) {
+            if (!mongoose.isValidObjectId(id)) {
                 return res.status(400).json({
                     success: false,
-                    message: "رقم المنتج غير صالح",
+                    message: "رقم المنتج غير صالح"
                 });
             }
 
-            const result = await Products.findById(id);
+            const result = await Products.getById(id);
 
             if (!result) {
                 return res.status(404).json({
                     success: false,
-                    message: "المنتج غير موجود",
+                    message: "المنتج غير موجود"
                 });
             }
 
-            res.status(200).json({
+            return res.status(200).json({
                 success: true,
-                result,
+                result
             });
-
         } catch (error) {
             next(error);
         }
@@ -53,9 +53,9 @@ class ProductsController {
     // ==================== CREATE ====================
     static async create(req, res, next) {
         try {
-            const category_id = Number(req.body.category_id);
+            const category_id = req.body.category_id;
             const name = String(req.body.name || "").trim();
-            const unit = req.body.unit;
+            const unit = req.body.unit || "piece";
 
             const Received = Number(req.body.Received ?? 0);
             const Sale = Number(req.body.Sale ?? 0);
@@ -63,72 +63,64 @@ class ProductsController {
             const validNumber = (value) =>
                 Number.isFinite(value) && value >= 0;
 
-            // Validate name
             if (!name || name.length > 150) {
                 return res.status(400).json({
                     success: false,
-                    message: "اسم المنتج مطلوب وبحد أقصى 150 حرفًا",
+                    message: "اسم المنتج مطلوب وبحد أقصى 150 حرفًا"
                 });
             }
 
-            // Validate category ID
-            if (
-                !Number.isSafeInteger(category_id) ||
-                category_id <= 0
-            ) {
+            if (!mongoose.isValidObjectId(category_id)) {
                 return res.status(400).json({
                     success: false,
-                    message: "يرجى اختيار تصنيف صحيح",
+                    message: "يرجى اختيار تصنيف صحيح"
                 });
             }
 
-            // Validate unit
             if (!["kg", "piece"].includes(unit)) {
                 return res.status(400).json({
                     success: false,
-                    message: "الوحدة يجب أن تكون kg أو piece",
+                    message: "الوحدة يجب أن تكون kg أو piece"
                 });
             }
 
-            // Validate quantities
-            if (
-                !validNumber(Received) ||
-                !validNumber(Sale)
-            ) {
+            if (!validNumber(Received) || !validNumber(Sale)) {
                 return res.status(400).json({
                     success: false,
-                    message: "الكميات يجب أن تكون أرقامًا صحيحة أو عشرية صفرًا أو أكثر",
+                    message: "الكميات يجب أن تكون أرقامًا صفرًا أو أكثر"
                 });
             }
 
-            // Check category
+            if (Sale > Received) {
+                return res.status(400).json({
+                    success: false,
+                    message: "الكمية المباعة لا يمكن أن تتجاوز الكمية المستلمة"
+                });
+            }
+
             const category = await Categories.findById(category_id);
 
             if (!category) {
-                return res.status(400).json({
+                return res.status(404).json({
                     success: false,
-                    message: "التصنيف المحدد غير موجود",
+                    message: "التصنيف المحدد غير موجود"
                 });
             }
 
-            // Create product
-            // Residual calculated automatically in Model
-            const product = new Products({
+            const result = await Products.createProduct({
                 category_id,
                 name,
                 unit,
                 Received,
-                Sale,
+                Sale
             });
 
-            const id = await product.create();
+            const populatedProduct = await Products.getById(result._id);
 
-            const result = await Products.findById(id);
-
-            res.status(201).json({
+            return res.status(201).json({
                 success: true,
                 message: "تمت إضافة المنتج بنجاح",
-                result,
+                result: populatedProduct
             });
 
         } catch (error) {
@@ -139,8 +131,9 @@ class ProductsController {
     // ==================== UPDATE ====================
     static async update(req, res, next) {
         try {
-            const id = Number(req.params.id);
-            const category_id = Number(req.body.category_id);
+            const { id } = req.params;
+
+            const category_id = req.body.category_id;
             const name = String(req.body.name || "").trim();
             const unit = req.body.unit;
 
@@ -150,90 +143,78 @@ class ProductsController {
             const validNumber = (value) =>
                 Number.isFinite(value) && value >= 0;
 
-            // Validate product ID
-            if (!Number.isSafeInteger(id) || id <= 0) {
+            if (!mongoose.isValidObjectId(id)) {
                 return res.status(400).json({
                     success: false,
-                    message: "رقم المنتج غير صالح",
+                    message: "رقم المنتج غير صالح"
                 });
             }
 
-            // Validate name
             if (!name || name.length > 150) {
                 return res.status(400).json({
                     success: false,
-                    message: "اسم المنتج مطلوب وبحد أقصى 150 حرفًا",
+                    message: "اسم المنتج مطلوب وبحد أقصى 150 حرفًا"
                 });
             }
 
-            // Validate category
-            if (
-                !Number.isSafeInteger(category_id) ||
-                category_id <= 0
-            ) {
+            if (!mongoose.isValidObjectId(category_id)) {
                 return res.status(400).json({
                     success: false,
-                    message: "يرجى اختيار تصنيف صحيح",
+                    message: "يرجى اختيار تصنيف صحيح"
                 });
             }
 
-            // Validate unit
             if (!["kg", "piece"].includes(unit)) {
                 return res.status(400).json({
                     success: false,
-                    message: "الوحدة يجب أن تكون kg أو piece",
+                    message: "الوحدة يجب أن تكون kg أو piece"
                 });
             }
 
-            // Validate quantities
-            if (
-                !validNumber(Received) ||
-                !validNumber(Sale)
-            ) {
+            if (!validNumber(Received) || !validNumber(Sale)) {
                 return res.status(400).json({
                     success: false,
-                    message: "الكميات يجب أن تكون صفرًا أو أكثر",
+                    message: "الكميات يجب أن تكون أرقامًا صفرًا أو أكثر"
                 });
             }
 
-            // Check product
-            const existing = await Products.findById(id);
-
-            if (!existing) {
-                return res.status(404).json({
+            if (Sale > Received) {
+                return res.status(400).json({
                     success: false,
-                    message: "المنتج غير موجود",
+                    message: "الكمية المباعة لا يمكن أن تتجاوز الكمية المستلمة"
                 });
             }
 
-            // Check category
             const category = await Categories.findById(category_id);
 
             if (!category) {
-                return res.status(400).json({
+                return res.status(404).json({
                     success: false,
-                    message: "التصنيف المحدد غير موجود",
+                    message: "التصنيف المحدد غير موجود"
                 });
             }
 
-            // Update product
-            // Residual calculated automatically in Model
-            const product = new Products({
+            const result = await Products.updateProduct(id, {
                 category_id,
                 name,
                 unit,
                 Received,
-                Sale,
+                Sale
             });
 
-            await product.update(id);
+            if (!result) {
+                return res.status(404).json({
+                    success: false,
+                    message: "المنتج غير موجود"
+                });
+            }
 
-            const result = await Products.findById(id);
+            const populatedProduct = await Products.getById(id);
 
-            res.status(200).json({
+            return res.status(200).json({
                 success: true,
                 message: "تم تحديث المنتج بنجاح",
-                result,
+                result: populatedProduct
             });
 
         } catch (error) {
@@ -244,47 +225,30 @@ class ProductsController {
     // ==================== DELETE ====================
     static async delete(req, res, next) {
         try {
-            const id = Number(req.params.id);
+            const { id } = req.params;
 
-            if (!Number.isSafeInteger(id) || id <= 0) {
+            if (!mongoose.isValidObjectId(id)) {
                 return res.status(400).json({
                     success: false,
-                    message: "رقم المنتج غير صالح",
+                    message: "رقم المنتج غير صالح"
                 });
             }
 
-            const existing = await Products.findById(id);
+            const deleted = await Products.deleteProduct(id);
 
-            if (!existing) {
+            if (!deleted) {
                 return res.status(404).json({
                     success: false,
-                    message: "المنتج غير موجود",
+                    message: "المنتج غير موجود"
                 });
             }
 
-            const affectedRows = await Products.delete(id);
-
-            if (affectedRows === 0) {
-                return res.status(404).json({
-                    success: false,
-                    message: "لم يتم حذف المنتج",
-                });
-            }
-
-            res.status(200).json({
+            return res.status(200).json({
                 success: true,
-                message: "تم حذف المنتج بنجاح",
+                message: "تم حذف المنتج بنجاح"
             });
 
         } catch (error) {
-
-            if (error.code === "ER_ROW_IS_REFERENCED_2") {
-                return res.status(409).json({
-                    success: false,
-                    message: "لا يمكن حذف المنتج لأنه مرتبط بحركات مخزون",
-                });
-            }
-
             next(error);
         }
     }

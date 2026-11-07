@@ -1,128 +1,103 @@
 
-const db = require("../config/db");
+const mongoose = require("mongoose");
+const Categories = require("./categoryModel");
 
-class Products {
-    constructor({
-        category_id,
-        name,
-        unit = "piece",
-        Received = 0,
-        Sale = 0,
-        Residual = 0
-    }) {
-        this.category_id = category_id;
-        this.name = name;
-        this.unit = unit;
-        this.Received = Received;
-        this.Sale = Sale;
+const productSchema = new mongoose.Schema(
+    {
+        category_id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Category",
+            required: true
+        },
+        name: {
+            type: String,
+            required: true,
+            trim: true,
+            maxlength: 150
+        },
+        unit: {
+            type: String,
+            enum: ["kg", "piece"],
+            default: "piece",
+            required: true
+        },
+        Received: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
+        Sale: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
+        Residual: {
+            type: Number,
+            default: 0,
+            min: 0
+        }
+    },
+    { timestamps: true }
+);
 
-        // حساب المتبقي تلقائياً
-        this.Residual = Received - Sale;
+// VALIDATE + CALCULATE
+productSchema.pre("validate", async function () {
+    if (this.Sale > this.Received) {
+        throw new Error("الكمية المباعة أكبر من الكمية المستلمة");
     }
 
-    // CREATE
-    async create() {
-        const sql = `
-            INSERT INTO products
-            (category_id, name, unit, Received, Sale, Residual)
-            VALUES (?, ?, ?, ?, ?, ?)
-        `;
+    this.Residual = this.Received - this.Sale;
 
-        const [result] = await db.promise().query(sql, [
-            this.category_id,
-            this.name,
-            this.unit,
-            this.Received,
-            this.Sale,
-            this.Residual
-        ]);
+    const category = await Categories.findById(this.category_id);
 
-        return result.insertId;
+    if (!category) {
+        throw new Error("التصنيف غير موجود");
     }
+});
 
-    // READ ALL
-    static async findAll() {
-        const sql = `
-            SELECT
-                p.id,
-                p.category_id,
-                c.name AS category_name,
-                p.name,
-                p.unit,
-                p.Received,
-                p.Sale,
-                p.Residual
-            FROM products p
-            INNER JOIN categories c
-                ON c.id = p.category_id
-            ORDER BY p.id DESC
-        `;
+// CREATE
+productSchema.statics.createProduct = async function (data) {
+    const product = new this(data);
+    await product.save();
+    return product;
+};
 
-        const [rows] = await db.promise().query(sql);
-        return rows;
-    }
+// READ ALL
+productSchema.statics.getAll = async function () {
+    return await this.find()
+        .populate("category_id", "name")
+        .sort({ createdAt: -1 });
+};
 
-    // READ ONE
-    static async findById(id) {
-        const sql = `
-            SELECT
-                p.id,
-                p.category_id,
-                c.name AS category_name,
-                p.name,
-                p.unit,
-                p.Received,
-                p.Sale,
-                p.Residual
-            FROM products p
-            INNER JOIN categories c
-                ON c.id = p.category_id
-            WHERE p.id = ?
-            LIMIT 1
-        `;
+// READ ONE
+productSchema.statics.getById = async function (id) {
+    return await this.findById(id)
+        .populate("category_id", "name");
+};
 
-        const [rows] = await db.promise().query(sql, [id]);
+// UPDATE
+productSchema.statics.updateProduct = async function (id, data) {
+    const product = await this.findById(id);
 
-        return rows[0] || null;
-    }
+    if (!product) return null;
 
-    // UPDATE
-    async update(id) {
-        const sql = `
-            UPDATE products
-            SET category_id = ?,
-                name = ?,
-                unit = ?,
-                Received = ?,
-                Sale = ?,
-                Residual = ?
-            WHERE id = ?
-        `;
+    product.category_id = data.category_id;
+    product.name = data.name;
+    product.unit = data.unit;
+    product.Received = data.Received;
+    product.Sale = data.Sale;
 
-        const [result] = await db.promise().query(sql, [
-            this.category_id,
-            this.name,
-            this.unit,
-            this.Received,
-            this.Sale,
-            this.Residual,
-            id
-        ]);
+    await product.save();
 
-        return result.affectedRows;
-    }
+    return product;
+};
 
-    // DELETE
-    static async delete(id) {
-        const sql = `
-            DELETE FROM products
-            WHERE id = ?
-        `;
+// DELETE
+productSchema.statics.deleteProduct = async function (id) {
+    const product = await this.findByIdAndDelete(id);
+    return product;
+};
 
-        const [result] = await db.promise().query(sql, [id]);
-
-        return result.affectedRows;
-    }
-}
+const Products = mongoose.model("Product", productSchema);
 
 module.exports = Products;

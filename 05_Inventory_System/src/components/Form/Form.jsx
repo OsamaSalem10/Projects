@@ -19,18 +19,21 @@ export const Form = ({
 
   const navigate = useNavigate();
 
-  // تعبئة الحقول عند اختيار منتج للتعديل
-  useEffect(() => {
+// تعبئة الحقول عند اختيار منتج للتعديل
+useEffect(() => {
     if (editId) {
-      setCategoryId(String(editId.category_id ?? ""));
-      setName(editId.name ?? "");
-      setUnit(editId.unit ?? "piece");
-      setReceived(String(editId.Received ?? 0));
-      setSale(String(editId.Sale ?? 0));
+        setCategoryId(
+            String(editId.category_id?._id || editId.category_id || "")
+        );
+
+        setName(editId.name ?? "");
+        setUnit(editId.unit ?? "piece");
+        setReceived(String(editId.Received ?? 0));
+        setSale(String(editId.Sale ?? 0));
     } else {
-      resetForm();
+        resetForm();
     }
-  }, [editId]);
+}, [editId]);
 
   // إعادة ضبط الحقول
   const resetForm = () => {
@@ -54,7 +57,7 @@ export const Form = ({
 
     try {
       const data = {
-        category_id: Number(category_id),
+        category_id: String(category_id),
         name: name.trim(),
         unit,
         Received: Number(Received),
@@ -64,7 +67,7 @@ export const Form = ({
       if (editId) {
         const editService = new EditService();
 
-        await editService.editProduct(editId.id, data, update, navigate);
+        await editService.editProduct(editId._id, data, update, navigate);
       } else {
         const postService = new PostService();
 
@@ -89,7 +92,6 @@ export const Form = ({
             {/* Category */}
             <div className="mb-3">
               <label className="form-label">Categories</label>
-
               <select
                 className="form-control"
                 value={category_id}
@@ -98,8 +100,8 @@ export const Form = ({
               >
                 <option value="">Select Category</option>
 
-                {main?.categories?.map((category) => (
-                  <option key={category.id} value={category.id}>
+                {(main?.categories || []).map((category) => (
+                  <option key={category._id} value={category._id}>
                     {category.name}
                   </option>
                 ))}

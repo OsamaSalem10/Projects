@@ -3,53 +3,44 @@ import { useNavigate } from "react-router-dom";
 import DeleteService from "../../server/delete";
 import { useState } from "react";
 
-export const Table = ({
-  main,
-  update,
-  setShowModal,
-  setEditId
-}) => {
+export const Table = ({ main, update, setShowModal, setEditId }) => {
   const [search, setSearch] = useState("");
 
   const navigate = useNavigate();
   const { id } = useParams();
-   const products = main?.products?.filter(
-    (product) => Number(product.category_id) === Number(id)
-  ) || [];
+
+  const products =
+    main?.products?.filter(
+      (product) =>
+        String(product.category_id?._id || product.category_id) === String(id),
+    ) || [];
   // ================= DELETE =================
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm(
-      "هل أنت متأكد من حذف هذا المنتج؟"
-    );
+    const confirmDelete = window.confirm("هل أنت متأكد من حذف هذا المنتج؟");
 
     if (!confirmDelete) return;
 
     try {
       const deleteServiceProduct = new DeleteService();
 
-      await deleteServiceProduct._deleteProduct(
-        id,
-        update,
-        navigate
-      );
+      await deleteServiceProduct._deleteProduct(id, update, navigate);
     } catch (error) {
-      console.log(
-        error.response?.data?.message || "فشل حذف المنتج"
-      );
+      console.log(error.response?.data?.message || "فشل حذف المنتج");
     }
   };
-
   // ================= SEARCH =================
-  const filteredProducts = (main?.products || []).filter(
-    (product) => {
-      const term = search.trim().toLowerCase();
+  const filteredProducts = (main?.products || []).filter((product) => {
+    const term = search.trim().toLowerCase();
 
-      return (
-        product.name?.toLowerCase().includes(term) ||
-        product.category_name?.toLowerCase().includes(term)
-      );
-    }
-  );
+    const productName = product.name?.toLowerCase() || "";
+
+    const categoryName =
+      product.category_id?.name?.toLowerCase() ||
+      product.category_name?.toLowerCase() ||
+      "";
+
+    return productName.includes(term) || categoryName.includes(term);
+  });
 
   // ================= EDIT =================
   const handleEdit = (product) => {
@@ -60,7 +51,7 @@ export const Table = ({
   return (
     <div className="md:col-8 col-12">
       <div className="card p-5 p-md-5">
-<h3 className="card-title text-center p-3">جدول المنتجات</h3>
+        <h3 className="card-title text-center p-3">جدول المنتجات</h3>
         {/* SEARCH */}
         <div className="p-3">
           <div className="input-group mb-3">
@@ -81,7 +72,6 @@ export const Table = ({
         {/* TABLE */}
         <div className="table-responsive border rounded p-3">
           <table className="table table-hover align-middle">
-
             <thead>
               <tr>
                 <th>Unit</th>
@@ -98,13 +88,12 @@ export const Table = ({
             <tbody>
               {products.length > 0 ? (
                 products.map((product) => (
-                  <tr key={product.id}>
-
+                  <tr key={product._id}>
                     <td>{product.unit}</td>
 
                     <td>{product.name}</td>
 
-                    <td>{product.category_name}</td>
+                    <td>{product?.category_id?.name}</td>
 
                     <td>{product.Received}</td>
 
@@ -116,8 +105,8 @@ export const Table = ({
                           Number(product.Residual) < 0
                             ? "bg-danger"
                             : Number(product.Residual) === 0
-                            ? "bg-warning text-dark"
-                            : "bg-success"
+                              ? "bg-warning text-dark"
+                              : "bg-success"
                         }`}
                       >
                         {product.Residual}
@@ -141,13 +130,12 @@ export const Table = ({
                       <button
                         type="button"
                         className="btn btn-danger btn-sm"
-                        onClick={() => handleDelete(product.id)}
+                        onClick={() => handleDelete(product._id)}
                         title="حذف"
                       >
                         <i className="bi bi-trash"></i>
                       </button>
                     </td>
-
                   </tr>
                 ))
               ) : (
@@ -158,7 +146,6 @@ export const Table = ({
                 </tr>
               )}
             </tbody>
-
           </table>
         </div>
 
@@ -166,7 +153,6 @@ export const Table = ({
         <div className="text-muted mt-3">
           عدد المنتجات: {filteredProducts.length}
         </div>
-
       </div>
     </div>
   );

@@ -15,7 +15,7 @@ class EditService {
     try {
       const { data } = await api.put(`/products/${id}`, formData);
       update(data);
-      navigate("/");
+      navigate(`/${id}`);
     } catch (error) {
       console.error("Error editing product:", error);
       throw error;
