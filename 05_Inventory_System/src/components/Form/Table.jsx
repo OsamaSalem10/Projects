@@ -8,12 +8,15 @@ export const Table = ({ main, update, setShowModal, setEditId }) => {
 
   const navigate = useNavigate();
   const { id } = useParams();
-
-  const products =
-    main?.products?.filter(
-      (product) =>
-        String(product.category_id?._id || product.category_id) === String(id),
-    ) || [];
+const category = main?.categories?.find(
+  (cat) => String(cat._id) === String(id)
+);
+ const products = id
+    ? main?.products?.filter(
+        (product) =>
+            String(product.category_id?._id || product.category_id) === String(id)
+      ) || []
+    : main?.products || [];
   // ================= DELETE =================
   const handleDelete = async (id) => {
     const confirmDelete = window.confirm("هل أنت متأكد من حذف هذا المنتج؟");
@@ -51,7 +54,7 @@ export const Table = ({ main, update, setShowModal, setEditId }) => {
   return (
     <div className="md:col-8 col-12">
       <div className="card p-5 p-md-5">
-        <h3 className="card-title text-center p-3">جدول المنتجات</h3>
+        <h3 className="card-title text-center p-3"><h3>{category?.name || "جميع المنتجات"}</h3></h3>
         {/* SEARCH */}
         <div className="p-3">
           <div className="input-group mb-3">
