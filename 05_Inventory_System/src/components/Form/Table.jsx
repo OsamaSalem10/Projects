@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import DeleteService from "../../server/delete";
 import { useState } from "react";
 
-export const Table = ({ main, update, setShowModal, setEditId }) => {
+export const Table = ({ main, update, setShowModal, setEditId , setMain}) => {
   const [search, setSearch] = useState("");
 
   const navigate = useNavigate();
@@ -31,19 +31,7 @@ const category = main?.categories?.find(
       console.log(error.response?.data?.message || "فشل حذف المنتج");
     }
   };
-  // ================= SEARCH =================
-  const filteredProducts = (main?.products || []).filter((product) => {
-    const term = search.trim().toLowerCase();
 
-    const productName = product.name?.toLowerCase() || "";
-
-    const categoryName =
-      product.category_id?.name?.toLowerCase() ||
-      product.category_name?.toLowerCase() ||
-      "";
-
-    return productName.includes(term) || categoryName.includes(term);
-  });
 
   // ================= EDIT =================
   const handleEdit = (product) => {
@@ -66,8 +54,22 @@ const category = main?.categories?.find(
               type="search"
               className="form-control"
               placeholder="ابحث عن منتج أو تصنيف..."
-              value={search}
               onChange={(e) => setSearch(e.target.value)}
+                        onKeyUp={() => {
+                          if (search === "") {
+                            update();
+                          } else {
+                            
+                            setMain((prev) => ({
+                              ...prev,
+                              products: prev.products.filter((product) =>
+                                product.name
+                                  .toLowerCase()
+                                  .includes(search.toLowerCase()),
+                              ),
+                            }));
+                          }
+                        }}
             />
           </div>
         </div>
@@ -79,7 +81,6 @@ const category = main?.categories?.find(
               <tr>
                 <th>Unit</th>
                 <th>Name</th>
-                <th>Category</th>
                 <th>Received</th>
                 <th>Sale</th>
                 <th>Residual</th>
@@ -96,7 +97,6 @@ const category = main?.categories?.find(
 
                     <td>{product.name}</td>
 
-                    <td>{product?.category_id?.name}</td>
 
                     <td>{product.Received}</td>
 
@@ -154,7 +154,7 @@ const category = main?.categories?.find(
 
         {/* RESULTS COUNT */}
         <div className="text-muted mt-3">
-          عدد المنتجات: {filteredProducts.length}
+          عدد المنتجات: {main?.products?.length || 0}
         </div>
       </div>
     </div>
